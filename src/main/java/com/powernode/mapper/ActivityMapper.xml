@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.powernode.mapper.ActivityMapper">
+
+    <select id="getAll" resultType="Activity">
+        select * from tbl_marketing_activities
+        limit
+        #{start},#{rp}
+    </select>
+
+    <select id="getCount" resultType="Integer">
+        select count(*) from tbl_marketing_activities
+    </select>
+
+</mapper>

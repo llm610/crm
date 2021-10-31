@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.powernode.mapper.ValueMapper">
+    <!--打开二级缓存,但是会遇到缓存异常问题，多表查询会出现脏读（解决缓存问题需要序列化实体类）-->
+    <cache />
+
+    <resultMap id="map" type="Value">
+        <id property="id" column="id"/>
+        <result property="value" column="value" />
+        <result property="text" column="text" />
+        <result property="orderNo" column="orderNo" />
+        <result property="typeCode" column="typeCode" />
+        <association property="type"  javaType="com.powernode.beans.Type">
+            <id property="code" column="code"/>
+            <result property="name" column="name"/>
+            <result property="description" column="description"/>
+        </association>
+
+    </resultMap>
+
+
+    <select id="getAll" resultMap="map"  useCache="false">
+        select
+        v.id as id,
+        v.value as value,
+        v.text as text,
+        v.orderNo as orderNo,
+        v.typeCode as typeCode,
+
+        t.code as code,
+        t.name as name,
+        t.description as description
+        from
+        tbl_dictionary_value as v,tbl_dictionary_type as t
+        where
+        v.typeCode=t.code
+        order by
+        v.orderNo asc ,t.code asc
+    </select>
+
+    <select id="getById" resultMap="map"  useCache="false">
+        select
+        v.id as id,
+        v.value as value, 
+        v.text as text,
+        v.orderNo as orderNo,
+        v.typeCode as typeCode,
+
+        t.code as code,
+        t.name as name,
+        t.description as description
+        from tbl_dictionary_value as v,tbl_dictionary_type as t
+        where
+        v.typeCode=t.code
+        and
+        id=#{id}
+        order by
+        v.orderNo asc ,t.code asc
+    </select>
+
+    <insert id="insert">
+        insert into tbl_dictionary_value
+        (id,value,text,orderNo,typeCode)
+        values
+        (#{id},#{value},#{text},#{orderNo},#{typeCode})
+    </insert>
+
+    <update id="update">
+        update tbl_dictionary_value set
+
+        value=#{value},
+        text=#{text},
+        orderNo=#{orderNo},
+        typeCode=#{typeCode}
+        where
+        id=#{id}
+    </update>
+
+
+    <delete id="delete">
+        delete from tbl_dictionary_value
+        where id in
+        <foreach collection="array" item="id" open="(" close=")" separator=",">
+        #{id}
+        </foreach>
+
+    </delete>
+</mapper>

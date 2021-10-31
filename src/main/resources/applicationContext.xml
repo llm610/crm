@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--声明组件扫描器-->
+    <context:component-scan base-package="com.powernode.**.service" />
+    <!--加载配置-->
+    <!--
+    ignore-unresolvable为true时，配置文件${}找不到对应占位符的值，直接赋值'${}'
+    -->
+    <context:property-placeholder location="classpath:jdbc.properties" ignore-unresolvable="true"/>
+
+    <!--导入外部配置文件-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+    <!--配置数据源druid-->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!--声明SqlSessionFactory-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--衔接数据源，目前使用的是数据库连接池-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--批量起别名,放在beans包中【也就是实体】-->
+        <property name="typeAliasesPackage" value="com.powernode.beans"/>
+        <!--读取mybatis的主配置-->
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
+    </bean>
+
+    <!--声明MyBatis的扫描器-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <!--注册MyBatis的映射文件-->
+        <property name="basePackage" value="com.powernode.mapper"/>
+    </bean>
+
+    <!--配置声明式事务-->
+    <bean id="tranManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置切面-->
+    <tx:advice id="myAdvice" transaction-manager="tranManager">
+        <tx:attributes>
+            <tx:method name="save*" rollback-for="java.lang.Exception" />
+            <tx:method name="delete*" rollback-for="java.lang.Exception" />
+            <tx:method name="update*" rollback-for="java.lang.Exception" />
+            <tx:method name="*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!--配置AOP-->
+    <aop:config>
+        <!--指定切入点-->
+        <aop:pointcut id="allService" expression="execution(* *..service..*.*(..))"/>
+        <!--指定切面+指定切入点-->
+        <aop:advisor advice-ref="myAdvice" pointcut-ref="allService"/>
+    </aop:config>
+</beans>
